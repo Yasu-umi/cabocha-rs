@@ -8,3 +8,10 @@ dependencies:
 test:
   override:
     - cargo build
+deployment:
+  production:
+    branch: master
+    commands:
+      - cargo login $CARGO_API_KEY
+      - rm ~/.gitconfig
+      - cargo publish
