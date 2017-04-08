@@ -1,0 +1,10 @@
+machine:
+  environment:
+    PATH: $HOME/.cargo/bin:$PATH
+dependencies:
+  pre:
+    - curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly -y
+    - rustup update
+test:
+  override:
+    - cargo build
