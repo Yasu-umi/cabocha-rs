@@ -40,6 +40,7 @@ const CABOCHA_TRAIN_NE: i32 = 0;
 const CABOCHA_TRAIN_CHUNK: i32 = 1;
 const CABOCHA_TRAIN_DEP: i32 = 2;
 
+#[derive(Debug)]
 pub enum CABOCHA_CHARSET_TYPE {
     EUC_JP = CABOCHA_EUC_JP as isize,
     CP932 = CABOCHA_CP932 as isize,
@@ -47,12 +48,14 @@ pub enum CABOCHA_CHARSET_TYPE {
     ASCII = CABOCHA_ASCII as isize,
 }
 
+#[derive(Debug)]
 pub enum CABOCHA_POSSET_TYPE {
     IPA = CABOCHA_IPA as isize,
     JUMAN = CABOCHA_JUMAN as isize,
     UNIDIC = CABOCHA_UNIDIC as isize,
 }
 
+#[derive(Debug)]
 pub enum CABOCHA_FORMAT {
     TREE = CABOCHA_FORMAT_TREE as isize,
     LATTICE = CABOCHA_FORMAT_LATTICE as isize,
@@ -62,6 +65,7 @@ pub enum CABOCHA_FORMAT {
     NONE = CABOCHA_FORMAT_NONE as isize,
 }
 
+#[derive(Debug)]
 pub enum CABOCHA_INPUT {
     RAW_SENTENCE = CABOCHA_INPUT_RAW_SENTENCE as isize,
     POS = CABOCHA_INPUT_POS as isize,
@@ -70,6 +74,7 @@ pub enum CABOCHA_INPUT {
     DEP = CABOCHA_INPUT_DEP as isize,
 }
 
+#[derive(Debug)]
 pub enum CABOCHA_OUTPUT {
     RAW_SENTENCE = CABOCHA_OUTPUT_RAW_SENTENCE as isize,
     POS = CABOCHA_OUTPUT_POS as isize,
@@ -116,7 +121,7 @@ impl Chunk {
                 token_pos: chunk.token_pos,
                 score: chunk.score,
                 feature_list: ptr_to_vec_string(chunk.feature_list,
-                                                       chunk.feature_list_size as usize),
+                                                chunk.feature_list_size as usize),
                 additional_info: ptr_to_string(chunk.additional_info),
                 feature_list_size: chunk.feature_list_size,
             }
@@ -138,6 +143,7 @@ struct cabocha_token_t {
 
 #[derive(Clone)]
 pub struct Token {
+    self_ptr: *const cabocha_token_t,
     pub surface: String,
     pub normalized_surface: String,
     pub feature: String,
@@ -145,7 +151,7 @@ pub struct Token {
     pub feature_list_size: u16,
     pub ne: String,
     pub additional_info: String,
-    chunk: *const cabocha_chunk_t,
+    chunk_ptr: *mut cabocha_chunk_t,
 }
 
 impl Token {
@@ -153,24 +159,25 @@ impl Token {
         unsafe {
             let ref token = *raw_ptr;
             Token {
+                self_ptr: raw_ptr,
                 surface: ptr_to_string(token.surface),
                 normalized_surface: ptr_to_string(token.normalized_surface),
                 feature: ptr_to_string(token.feature),
                 feature_list: ptr_to_vec_string(token.feature_list,
-                                                       token.feature_list_size as usize),
+                                                token.feature_list_size as usize),
                 feature_list_size: token.feature_list_size,
                 ne: ptr_to_string(token.ne),
                 additional_info: ptr_to_string(token.additional_info),
-                chunk: token.chunk,
+                chunk_ptr: token.chunk as *mut cabocha_chunk_t,
             }
         }
     }
 
     pub fn chunk(&self) -> Option<Chunk> {
-        if !self.chunk.is_null() {
-            Some(Chunk::new(self.chunk))
-        } else {
+        if self.chunk_ptr.is_null() {
             None
+        } else {
+            Some(Chunk::new(self.chunk_ptr))
         }
     }
 }
@@ -264,10 +271,8 @@ impl Drop for Parser {
 
 impl Parser {
     pub fn new<T: Into<Vec<u8>>>(arg: T) -> Parser {
-        unsafe {
-            let inner = cabocha_new2(str_to_heap_ptr(arg)) as *mut c_void;
-            Parser { inner: inner }
-        }
+        let inner = unsafe { cabocha_new2(str_to_heap_ptr(arg)) as *mut c_void };
+        Parser { inner: inner }
     }
 
     pub fn parse_to_tree<T: Into<Vec<u8>>>(&self, text: T) -> Tree {
@@ -310,7 +315,7 @@ impl Tree {
         }
     }
 
-    fn free_input(&mut self) {
+    fn free_input(&self) {
         if !self.input.is_null() {
             unsafe {
                 CString::from_raw(self.input as *mut i8);
@@ -346,11 +351,8 @@ impl Tree {
         }
     }
 
-    pub fn token(&mut self, index: usize) -> Option<Token> {
-        let raw_ptr;
-        unsafe {
-            raw_ptr = cabocha_tree_token(self.inner, index);
-        }
+    pub fn token(&self, index: usize) -> Option<Token> {
+        let raw_ptr = unsafe { cabocha_tree_token(self.inner, index) };
         if raw_ptr.is_null() {
             None
         } else {
@@ -358,11 +360,8 @@ impl Tree {
         }
     }
 
-    pub fn chunk(&mut self, index: usize) -> Option<Chunk> {
-        let raw_ptr;
-        unsafe {
-            raw_ptr = cabocha_tree_chunk(self.inner, index);
-        }
+    pub fn chunk(&self, index: usize) -> Option<Chunk> {
+        let raw_ptr = unsafe { cabocha_tree_chunk(self.inner, index) };
         if raw_ptr.is_null() {
             None
         } else {
@@ -370,11 +369,8 @@ impl Tree {
         }
     }
 
-    pub fn add_token(&mut self) -> Option<Token> {
-        let raw_ptr;
-        unsafe {
-            raw_ptr = cabocha_tree_add_token(self.inner);
-        }
+    pub fn add_token(&self) -> Option<Token> {
+        let raw_ptr = unsafe { cabocha_tree_add_token(self.inner) };
         if raw_ptr.is_null() {
             None
         } else {
@@ -382,11 +378,8 @@ impl Tree {
         }
     }
 
-    pub fn add_chunk(&mut self) -> Option<Chunk> {
-        let raw_ptr;
-        unsafe {
-            raw_ptr = cabocha_tree_add_chunk(self.inner);
-        }
+    pub fn add_chunk(&self) -> Option<Chunk> {
+        let raw_ptr = unsafe { cabocha_tree_add_chunk(self.inner) };
         if raw_ptr.is_null() {
             None
         } else {
@@ -394,90 +387,101 @@ impl Tree {
         }
     }
 
-    pub fn read(&mut self, input_layer: CABOCHA_INPUT) -> bool {
+    pub fn read(&self, input_layer: CABOCHA_INPUT) -> bool {
         let len = ptr_to_string(self.input).len();
         unsafe { cabocha_tree_read(self.inner, self.input, len, input_layer as i32) != 0 }
     }
 
-    pub fn empty(&mut self) -> bool {
+    pub fn empty(&self) -> bool {
         unsafe { cabocha_tree_empty(self.inner) != 0 }
     }
 
-    pub fn clear(&mut self) {
+    pub fn clear(&self) {
         unsafe {
             cabocha_tree_clear(self.inner);
         }
         self.free_input();
     }
 
-    pub fn clear_chunk(&mut self) {
+    pub fn clear_chunk(&self) {
         unsafe { cabocha_tree_clear_chunk(self.inner) }
     }
 
-    pub fn chunk_size(&mut self) -> usize {
+    pub fn chunk_size(&self) -> usize {
         unsafe { cabocha_tree_chunk_size(self.inner) }
     }
 
-    pub fn token_size(&mut self) -> usize {
+    pub fn token_size(&self) -> usize {
         unsafe { cabocha_tree_token_size(self.inner) }
     }
 
-    pub fn size(&mut self) -> usize {
+    pub fn size(&self) -> usize {
         unsafe { cabocha_tree_size(self.inner) }
     }
 
-    pub fn to_string(&mut self, format_type: CABOCHA_FORMAT) -> String {
+    pub fn to_string(&self, format_type: CABOCHA_FORMAT) -> String {
         unsafe { ptr_to_string(cabocha_tree_tostr(self.inner, format_type as c_int)) }
     }
 
-    pub fn charset(&mut self) -> Option<CABOCHA_CHARSET_TYPE> {
-        unsafe {
-            let val = cabocha_tree_charset(self.inner);
-            match val {
-                CABOCHA_EUC_JP => Some(CABOCHA_CHARSET_TYPE::EUC_JP),
+    pub fn charset(&self) -> Option<CABOCHA_CHARSET_TYPE> {
+        let val = unsafe { cabocha_tree_charset(self.inner) };
+        match val {
+            CABOCHA_EUC_JP => Some(CABOCHA_CHARSET_TYPE::EUC_JP),
                 CABOCHA_CP932 => Some(CABOCHA_CHARSET_TYPE::CP932),
-                CABOCHA_UTF8 => Some(CABOCHA_CHARSET_TYPE::UTF8),
-                CABOCHA_ASCII => Some(CABOCHA_CHARSET_TYPE::ASCII),
-                _ => None,
-            }
+            CABOCHA_UTF8 => Some(CABOCHA_CHARSET_TYPE::UTF8),
+            CABOCHA_ASCII => Some(CABOCHA_CHARSET_TYPE::ASCII),
+            _ => None,
         }
     }
 
-    pub fn set_charset(&mut self, charset: CABOCHA_CHARSET_TYPE) {
+    pub fn set_charset(&self, charset: CABOCHA_CHARSET_TYPE) {
         unsafe { cabocha_tree_set_charset(self.inner, charset as c_int) }
     }
 
-    pub fn posset(&mut self) -> Option<CABOCHA_POSSET_TYPE> {
-        unsafe {
-            let val = cabocha_tree_posset(self.inner);
-            match val {
-                CABOCHA_IPA => Some(CABOCHA_POSSET_TYPE::IPA),
-                CABOCHA_JUMAN => Some(CABOCHA_POSSET_TYPE::JUMAN),
-                CABOCHA_UNIDIC => Some(CABOCHA_POSSET_TYPE::UNIDIC),
-                _ => None,
-            }
+    pub fn posset(&self) -> Option<CABOCHA_POSSET_TYPE> {
+        let val = unsafe { cabocha_tree_posset(self.inner) };
+        match val {
+            CABOCHA_IPA => Some(CABOCHA_POSSET_TYPE::IPA),
+            CABOCHA_JUMAN => Some(CABOCHA_POSSET_TYPE::JUMAN),
+            CABOCHA_UNIDIC => Some(CABOCHA_POSSET_TYPE::UNIDIC),
+            _ => None,
         }
     }
 
-    pub fn set_posset(&mut self, posset: CABOCHA_POSSET_TYPE) {
+    pub fn set_posset(&self, posset: CABOCHA_POSSET_TYPE) {
         unsafe { cabocha_tree_set_posset(self.inner, posset as c_int) }
     }
 
-    pub fn output_layer(&mut self) -> Option<CABOCHA_OUTPUT> {
-        unsafe {
-            let val = cabocha_tree_output_layer(self.inner);
-            match val {
-                CABOCHA_OUTPUT_POS => Some(CABOCHA_OUTPUT::POS),
-                CABOCHA_OUTPUT_CHUNK => Some(CABOCHA_OUTPUT::CHUNK),
-                CABOCHA_OUTPUT_SELECTION => Some(CABOCHA_OUTPUT::SELECTION),
-                CABOCHA_OUTPUT_DEP => Some(CABOCHA_OUTPUT::DEP),
-                _ => None,
-            }
+    pub fn output_layer(&self) -> Option<CABOCHA_OUTPUT> {
+        let val = unsafe { cabocha_tree_output_layer(self.inner) };
+        match val {
+            CABOCHA_OUTPUT_POS => Some(CABOCHA_OUTPUT::POS),
+            CABOCHA_OUTPUT_CHUNK => Some(CABOCHA_OUTPUT::CHUNK),
+            CABOCHA_OUTPUT_SELECTION => Some(CABOCHA_OUTPUT::SELECTION),
+            CABOCHA_OUTPUT_DEP => Some(CABOCHA_OUTPUT::DEP),
+            _ => None,
         }
     }
 
-    pub fn set_output_layer(&mut self, output_layer: CABOCHA_OUTPUT) {
+    pub fn set_output_layer(&self, output_layer: CABOCHA_OUTPUT) {
         unsafe { cabocha_tree_set_output_layer(self.inner, output_layer as c_int) }
     }
-}
 
+    pub fn tokens(&self) -> Vec<Option<Token>> {
+        let token_size = self.token_size();
+        let mut tokens = Vec::with_capacity(token_size);
+        for i in 0..token_size {
+            tokens.push(self.token(i));
+        }
+        tokens
+    }
+
+    pub fn chunks(&self) -> Vec<Option<Chunk>> {
+        let chunk_size = self.chunk_size();
+        let mut chunks = Vec::with_capacity(chunk_size);
+        for i in 0..chunk_size {
+            chunks.push(self.chunk(i));
+        }
+        chunks
+    }
+}
