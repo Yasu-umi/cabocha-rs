@@ -4,7 +4,9 @@ use std::str;
 
 
 pub fn ptr_to_string(ptr: *const c_char) -> String {
-    unsafe { str::from_utf8(CStr::from_ptr(ptr).to_bytes()).unwrap().to_string() }
+    unsafe {
+        str::from_utf8(CStr::from_ptr(ptr).to_bytes()).map_err(|_| "").unwrap().to_string()
+    }
 }
 
 pub fn ptr_to_vec_string(ptr: *const *const c_char, size: usize) -> Vec<String> {

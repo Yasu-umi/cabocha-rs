@@ -5,7 +5,7 @@ use std::ptr;
 use std::os::raw::*;
 use std::ffi::CString;
 
-use utils;
+use utils::*;
 
 
 const CABOCHA_EUC_JP: i32 = 0;
@@ -98,10 +98,10 @@ pub struct Chunk {
     pub func_pos: usize,
     pub token_size: usize,
     pub token_pos: usize,
-    pub score: f32,
+    pub score: c_float,
     pub feature_list: Vec<String>,
     pub additional_info: String,
-    pub feature_list_size: u16,
+    pub feature_list_size: c_ushort,
 }
 
 impl Chunk {
@@ -115,9 +115,9 @@ impl Chunk {
                 token_size: chunk.token_size,
                 token_pos: chunk.token_pos,
                 score: chunk.score,
-                feature_list: utils::ptr_to_vec_string(chunk.feature_list,
+                feature_list: ptr_to_vec_string(chunk.feature_list,
                                                        chunk.feature_list_size as usize),
-                additional_info: utils::ptr_to_string(chunk.additional_info),
+                additional_info: ptr_to_string(chunk.additional_info),
                 feature_list_size: chunk.feature_list_size,
             }
         }
@@ -133,7 +133,7 @@ struct cabocha_token_t {
     feature_list_size: c_ushort,
     ne: *const c_char,
     additional_info: *const c_char,
-    chunk: *mut cabocha_chunk_t,
+    chunk: *const cabocha_chunk_t,
 }
 
 #[derive(Clone)]
@@ -145,7 +145,7 @@ pub struct Token {
     pub feature_list_size: u16,
     pub ne: String,
     pub additional_info: String,
-    chunk: *mut cabocha_chunk_t,
+    chunk: *const cabocha_chunk_t,
 }
 
 impl Token {
@@ -153,14 +153,14 @@ impl Token {
         unsafe {
             let ref token = *raw_ptr;
             Token {
-                surface: utils::ptr_to_string(token.surface),
-                normalized_surface: utils::ptr_to_string(token.normalized_surface),
-                feature: utils::ptr_to_string(token.feature),
-                feature_list: utils::ptr_to_vec_string(token.feature_list,
+                surface: ptr_to_string(token.surface),
+                normalized_surface: ptr_to_string(token.normalized_surface),
+                feature: ptr_to_string(token.feature),
+                feature_list: ptr_to_vec_string(token.feature_list,
                                                        token.feature_list_size as usize),
                 feature_list_size: token.feature_list_size,
-                ne: utils::ptr_to_string(token.ne),
-                additional_info: utils::ptr_to_string(token.additional_info),
+                ne: ptr_to_string(token.ne),
+                additional_info: ptr_to_string(token.additional_info),
                 chunk: token.chunk,
             }
         }
@@ -265,23 +265,23 @@ impl Drop for Parser {
 impl Parser {
     pub fn new<T: Into<Vec<u8>>>(arg: T) -> Parser {
         unsafe {
-            let inner = cabocha_new2(utils::str_to_heap_ptr(arg)) as *mut c_void;
+            let inner = cabocha_new2(str_to_heap_ptr(arg)) as *mut c_void;
             Parser { inner: inner }
         }
     }
 
     pub fn parse_to_tree<T: Into<Vec<u8>>>(&self, text: T) -> Tree {
         let string = text.into();
-        unsafe { Tree::new_from_ptr(cabocha_sparse_totree(self.inner, utils::str_to_heap_ptr(string))) }
+        unsafe { Tree::new_from_ptr(cabocha_sparse_totree(self.inner, str_to_heap_ptr(string))) }
     }
 
     pub fn parse_to_str<T: Into<Vec<u8>>>(&self, text: T) -> String {
-        let ptr = utils::str_to_heap_ptr(text.into());
-        unsafe { utils::ptr_to_string(cabocha_sparse_tostr(self.inner, ptr)) }
+        let ptr = str_to_heap_ptr(text.into());
+        unsafe { ptr_to_string(cabocha_sparse_tostr(self.inner, ptr)) }
     }
 
     pub fn get_last_error(&self) -> String {
-        unsafe { utils::ptr_to_string(cabocha_strerror(self.inner)) }
+        unsafe { ptr_to_string(cabocha_strerror(self.inner)) }
     }
 }
 
@@ -329,7 +329,7 @@ impl Tree {
     }
 
     pub fn sentence(&self) -> String {
-        unsafe { utils::ptr_to_string(cabocha_tree_sentence(self.inner)) }
+        unsafe { ptr_to_string(cabocha_tree_sentence(self.inner)) }
     }
 
     pub fn sentence_size(&self) -> usize {
@@ -340,7 +340,7 @@ impl Tree {
         self.free_input();
         let string = sentence.into();
         let len = string.len();
-        self.input = utils::str_to_heap_ptr(string);
+        self.input = str_to_heap_ptr(string);
         unsafe {
             cabocha_tree_set_sentence(self.inner, self.input, len);
         }
@@ -395,7 +395,7 @@ impl Tree {
     }
 
     pub fn read(&mut self, input_layer: CABOCHA_INPUT) -> bool {
-        let len = utils::ptr_to_string(self.input).len();
+        let len = ptr_to_string(self.input).len();
         unsafe { cabocha_tree_read(self.inner, self.input, len, input_layer as i32) != 0 }
     }
 
@@ -427,7 +427,7 @@ impl Tree {
     }
 
     pub fn to_string(&mut self, format_type: CABOCHA_FORMAT) -> String {
-        unsafe { utils::ptr_to_string(cabocha_tree_tostr(self.inner, format_type as c_int)) }
+        unsafe { ptr_to_string(cabocha_tree_tostr(self.inner, format_type as c_int)) }
     }
 
     pub fn charset(&mut self) -> Option<CABOCHA_CHARSET_TYPE> {
