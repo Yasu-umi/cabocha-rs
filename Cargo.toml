@@ -1,7 +1,7 @@
 [package]
 name = "cabocha"
 license = "MIT"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Yasu_umi Nishikawa <yasu.umi.19910101@gmial.com>"]
 description = "Safe Rust wrapper for cabocha a japanese language dependency structure analyzer library"
 documentation = "https://github.com/Yasu-umi/cabocha-rs"

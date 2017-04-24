@@ -259,12 +259,14 @@ extern "C" {
 
 pub struct Parser {
     inner: *mut c_void,
+    input: *const i8,
 }
 
 impl Drop for Parser {
     fn drop(&mut self) {
         unsafe {
             cabocha_destroy(self.inner);
+            self.free_input();
         }
     }
 }
@@ -272,17 +274,32 @@ impl Drop for Parser {
 impl Parser {
     pub fn new<T: Into<Vec<u8>>>(arg: T) -> Parser {
         let inner = unsafe { cabocha_new2(str_to_heap_ptr(arg)) as *mut c_void };
-        Parser { inner: inner }
+        Parser {
+            inner: inner,
+            input: ptr::null(),
+        }
     }
 
-    pub fn parse_to_tree<T: Into<Vec<u8>>>(&self, text: T) -> Tree {
-        let string = text.into();
-        unsafe { Tree::new_from_ptr(cabocha_sparse_totree(self.inner, str_to_heap_ptr(string))) }
+    fn free_input(&self) {
+        if !self.input.is_null() {
+            unsafe {
+                CString::from_raw(self.input as *mut i8);
+            }
+        }
     }
 
-    pub fn parse_to_str<T: Into<Vec<u8>>>(&self, text: T) -> String {
-        let ptr = str_to_heap_ptr(text.into());
-        unsafe { ptr_to_string(cabocha_sparse_tostr(self.inner, ptr)) }
+    pub fn parse_to_tree<T: Into<Vec<u8>>>(&mut self, text: T) -> Tree {
+        let tree_ptr = unsafe { cabocha_tree_new() } as *mut c_void;
+        let mut tree = Tree::new_from_ptr(tree_ptr);
+        let _ = tree.set_sentence(text);
+        let _ = unsafe { cabocha_parse_tree(self.inner, tree.inner) };
+        tree
+    }
+
+    pub fn parse_to_str<T: Into<Vec<u8>>>(&mut self, text: T) -> String {
+        self.free_input();
+        self.input = str_to_heap_ptr(text.into());
+        unsafe { ptr_to_string(cabocha_sparse_tostr(self.inner, self.input)) }
     }
 
     pub fn get_last_error(&self) -> String {
@@ -342,9 +359,9 @@ impl Tree {
     }
 
     pub fn set_sentence<T: Into<Vec<u8>>>(&mut self, sentence: T) {
-        self.free_input();
         let string = sentence.into();
         let len = string.len();
+        self.free_input();
         self.input = str_to_heap_ptr(string);
         unsafe {
             cabocha_tree_set_sentence(self.inner, self.input, len);
@@ -405,6 +422,7 @@ impl Tree {
 
     pub fn clear_chunk(&self) {
         unsafe { cabocha_tree_clear_chunk(self.inner) }
+        self.free_input();
     }
 
     pub fn chunk_size(&self) -> usize {
@@ -427,7 +445,7 @@ impl Tree {
         let val = unsafe { cabocha_tree_charset(self.inner) };
         match val {
             CABOCHA_EUC_JP => Some(CABOCHA_CHARSET_TYPE::EUC_JP),
-                CABOCHA_CP932 => Some(CABOCHA_CHARSET_TYPE::CP932),
+            CABOCHA_CP932 => Some(CABOCHA_CHARSET_TYPE::CP932),
             CABOCHA_UTF8 => Some(CABOCHA_CHARSET_TYPE::UTF8),
             CABOCHA_ASCII => Some(CABOCHA_CHARSET_TYPE::ASCII),
             _ => None,
