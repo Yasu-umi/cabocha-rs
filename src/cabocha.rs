@@ -96,7 +96,7 @@ struct cabocha_chunk_t {
     feature_list_size: c_ushort,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Chunk {
     pub link: i32,
     pub head_pos: usize,
@@ -141,7 +141,7 @@ struct cabocha_token_t {
     chunk: *const cabocha_chunk_t,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Token {
     self_ptr: *const cabocha_token_t,
     pub surface: String,
