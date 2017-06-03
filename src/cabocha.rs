@@ -129,6 +129,45 @@ impl Chunk {
     }
 }
 
+pub struct ChunkIter<'a> {
+    tree: &'a Tree,
+    pos: usize,
+}
+impl<'a> Iterator for ChunkIter<'a> {
+    type Item = Chunk;
+
+    fn next(&mut self) -> Option<Chunk> {
+        let chunk = self.tree.chunk(self.pos);
+        self.pos += 1;
+        chunk
+    }
+}
+impl<'a> ChunkIter<'a> {
+    pub fn new(tree: &Tree) -> ChunkIter {
+        ChunkIter { tree: tree, pos: 0 }
+    }
+}
+
+pub struct TokenIter<'a> {
+    tree: &'a Tree,
+    pos: usize,
+}
+
+impl<'a> Iterator for TokenIter<'a> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Token> {
+        let token = self.tree.token(self.pos);
+        self.pos += 1;
+        token
+    }
+}
+impl<'a> TokenIter<'a> {
+    pub fn new(tree: &Tree) -> TokenIter {
+        TokenIter { tree: tree, pos: 0 }
+    }
+}
+
 #[repr(C)]
 struct cabocha_token_t {
     surface: *const c_char,
@@ -485,21 +524,19 @@ impl Tree {
         unsafe { cabocha_tree_set_output_layer(self.inner, output_layer as c_int) }
     }
 
-    pub fn tokens(&self) -> Vec<Option<Token>> {
-        let token_size = self.token_size();
-        let mut tokens = Vec::with_capacity(token_size);
-        for i in 0..token_size {
-            tokens.push(self.token(i));
-        }
-        tokens
+    pub fn tokens(&self) -> Vec<Token> {
+        self.token_iter().collect()
     }
 
-    pub fn chunks(&self) -> Vec<Option<Chunk>> {
-        let chunk_size = self.chunk_size();
-        let mut chunks = Vec::with_capacity(chunk_size);
-        for i in 0..chunk_size {
-            chunks.push(self.chunk(i));
-        }
-        chunks
+    pub fn chunks(&self) -> Vec<Chunk> {
+        self.chunk_iter().collect()
+    }
+
+    pub fn chunk_iter(&self) -> ChunkIter {
+        ChunkIter::new(&self)
+    }
+
+    pub fn token_iter(&self) -> TokenIter {
+        TokenIter::new(&self)
     }
 }
