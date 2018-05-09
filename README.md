@@ -1,6 +1,13 @@
 # cabocha-rs
 
 ## Example
+
+```bash
+cargo run --example test
+````
+
+## Usage
+
 ```toml
 [dependencies]
 cabocha = "*"
