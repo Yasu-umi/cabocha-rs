@@ -200,33 +200,47 @@ struct cabocha_token_t {
 #[derive(Debug, Clone)]
 pub struct Token {
     self_ptr: *const cabocha_token_t,
-    pub surface: String,
-    pub normalized_surface: String,
-    pub feature: String,
-    pub feature_list: Vec<String>,
-    pub feature_list_size: u16,
-    pub ne: String,
-    pub additional_info: String,
     chunk_ptr: *mut cabocha_chunk_t,
 }
 
 impl Token {
     fn new(raw_ptr: *const cabocha_token_t) -> Token {
-        unsafe {
-            let ref token = *raw_ptr;
-            Token {
-                self_ptr: raw_ptr,
-                surface: ptr_to_string(token.surface),
-                normalized_surface: ptr_to_string(token.normalized_surface),
-                feature: ptr_to_string(token.feature),
-                feature_list: ptr_to_vec_string(token.feature_list,
-                                                token.feature_list_size as usize),
-                feature_list_size: token.feature_list_size,
-                ne: ptr_to_string(token.ne),
-                additional_info: ptr_to_string(token.additional_info),
-                chunk_ptr: token.chunk as *mut cabocha_chunk_t,
-            }
+        let token = unsafe { &(*raw_ptr) };
+        Token {
+            self_ptr: token,
+            chunk_ptr: token.chunk as *mut cabocha_chunk_t,
         }
+    }
+
+    pub fn surface(&self) -> String {
+        unsafe { ptr_to_string((*self.self_ptr).surface) }
+    }
+
+    pub fn normalized_surface(&self) -> String {
+        unsafe { ptr_to_string((*self.self_ptr).normalized_surface) }
+    }
+
+    pub fn feature(&self) -> String {
+        unsafe { ptr_to_string((*self.self_ptr).feature) }
+    }
+
+    pub fn feature_list(&self) -> Vec<String> {
+        unsafe {
+            let token = &(*self.self_ptr);
+            ptr_to_vec_string(token.feature_list, token.feature_list_size as usize)
+        }
+    }
+
+    pub fn feature_list_size(&self) -> u16 {
+        unsafe { (*self.self_ptr).feature_list_size }
+    }
+
+    pub fn ne(&self) -> String {
+        unsafe { ptr_to_string((*self.self_ptr).ne) }
+    }
+
+    pub fn additional_info(&self) -> String {
+        unsafe { ptr_to_string((*self.self_ptr).additional_info) }
     }
 
     pub fn chunk(&self) -> Option<Chunk> {
