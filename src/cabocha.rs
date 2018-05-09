@@ -98,34 +98,51 @@ struct cabocha_chunk_t {
 
 #[derive(Debug, Clone)]
 pub struct Chunk {
-    pub link: i32,
-    pub head_pos: usize,
-    pub func_pos: usize,
-    pub token_size: usize,
-    pub token_pos: usize,
-    pub score: c_float,
-    pub feature_list: Vec<String>,
-    pub additional_info: String,
-    pub feature_list_size: c_ushort,
+    self_ptr: *const cabocha_chunk_t,
 }
 
 impl Chunk {
     fn new(raw_ptr: *const cabocha_chunk_t) -> Chunk {
+        Chunk { self_ptr: raw_ptr }
+    }
+
+    pub fn link(&self) -> i32 {
+        unsafe { (*self.self_ptr).link }
+    }
+
+    pub fn head_pos(&self) -> usize {
+        unsafe { (*self.self_ptr).head_pos }
+    }
+
+    pub fn func_pos(&self) -> usize {
+        unsafe { (*self.self_ptr).func_pos }
+    }
+
+    pub fn token_size(&self) -> usize {
+        unsafe { (*self.self_ptr).token_size }
+    }
+
+    pub fn token_pos(&self) -> usize {
+        unsafe { (*self.self_ptr).token_pos }
+    }
+
+    pub fn score(&self) -> f32 {
+        unsafe { (*self.self_ptr).score }
+    }
+
+    pub fn feature_list(&self) -> Vec<String> {
         unsafe {
-            let ref chunk = *raw_ptr;
-            Chunk {
-                link: chunk.link,
-                head_pos: chunk.head_pos,
-                func_pos: chunk.func_pos,
-                token_size: chunk.token_size,
-                token_pos: chunk.token_pos,
-                score: chunk.score,
-                feature_list: ptr_to_vec_string(chunk.feature_list,
-                                                chunk.feature_list_size as usize),
-                additional_info: ptr_to_string(chunk.additional_info),
-                feature_list_size: chunk.feature_list_size,
-            }
+            let chunk = &(*self.self_ptr);
+            ptr_to_vec_string(chunk.feature_list, chunk.feature_list_size as usize)
         }
+    }
+
+    pub fn additional_info(&self) -> String {
+        unsafe { ptr_to_string((*self.self_ptr).additional_info) }
+    }
+
+    pub fn feature_list_size(&self) -> u16 {
+        unsafe { (*self.self_ptr).feature_list_size }
     }
 }
 
