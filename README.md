@@ -4,7 +4,7 @@
 
 ```bash
 cargo run --example test
-````
+```
 
 ## Usage
 
@@ -12,6 +12,7 @@ cargo run --example test
 [dependencies]
 cabocha = "*"
 ```
+
 ```Rust
 extern crate cabocha;
 
@@ -26,3 +27,7 @@ fn main() {
   println!("{}", tree.to_string(cabocha::CABOCHA_FORMAT::TREE));
 }
 ```
+
+## LISENCE
+
+[MIT](./LISENCE)
