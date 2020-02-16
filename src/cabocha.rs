@@ -2,7 +2,7 @@ use std::ffi::CString;
 use std::os::raw::*;
 use std::ptr;
 
-use utils::*;
+use libc::size_t;
 
 const CABOCHA_EUC_JP: i32 = 0;
 const CABOCHA_CP932: i32 = 1;
@@ -90,10 +90,10 @@ pub enum CABOCHA_OUTPUT {
 #[repr(C)]
 struct cabocha_chunk_t {
   link: c_int,
-  head_pos: usize,
-  func_pos: usize,
-  token_size: usize,
-  token_pos: usize,
+  head_pos: size_t,
+  func_pos: size_t,
+  token_size: size_t,
+  token_pos: size_t,
   score: c_float,
   feature_list: *const *const c_char,
   additional_info: *const c_char,
@@ -272,22 +272,25 @@ extern "C" {
   fn cabocha_sparse_tostr2(
     cabocha: *mut c_void,
     str: *const c_char,
-    length: usize,
+    length: size_t,
   ) -> *const c_char;
   #[allow(dead_code)]
   fn cabocha_sparse_tostr3(
     cabocha: *mut c_void,
     str: *const c_char,
-    length: usize,
+    length: size_t,
     output_str: *const c_char,
-    output_length: usize,
+    output_length: size_t,
   ) -> *const c_char;
   fn cabocha_destroy(cabocha: *mut c_void);
   #[allow(dead_code)]
   fn cabocha_sparse_totree(cabocha: *mut c_void, str: *const c_char) -> *mut c_void;
   #[allow(dead_code)]
-  fn cabocha_sparse_totree2(cabocha: *mut c_void, str: *const c_char, length: usize)
-    -> *mut c_void;
+  fn cabocha_sparse_totree2(
+    cabocha: *mut c_void,
+    str: *const c_char,
+    length: size_t,
+  ) -> *mut c_void;
 
   /* tree */
   fn cabocha_tree_new() -> *const c_void;
@@ -295,23 +298,23 @@ extern "C" {
   fn cabocha_tree_empty(tree: *mut c_void) -> c_int;
   fn cabocha_tree_clear(tree: *mut c_void);
   fn cabocha_tree_clear_chunk(tree: *mut c_void);
-  fn cabocha_tree_size(tree: *mut c_void) -> usize;
-  fn cabocha_tree_chunk_size(tree: *mut c_void) -> usize;
-  fn cabocha_tree_token_size(tree: *mut c_void) -> usize;
+  fn cabocha_tree_size(tree: *mut c_void) -> size_t;
+  fn cabocha_tree_chunk_size(tree: *mut c_void) -> size_t;
+  fn cabocha_tree_token_size(tree: *mut c_void) -> size_t;
   fn cabocha_tree_sentence(tree: *mut c_void) -> *const c_char;
-  fn cabocha_tree_sentence_size(tree: *mut c_void) -> usize;
-  fn cabocha_tree_set_sentence(tree: *mut c_void, sentence: *const c_char, length: usize);
+  fn cabocha_tree_sentence_size(tree: *mut c_void) -> size_t;
+  fn cabocha_tree_set_sentence(tree: *mut c_void, sentence: *const c_char, length: size_t);
   fn cabocha_tree_read(
     tree: *mut c_void,
     input: *const c_char,
-    length: usize,
+    length: size_t,
     input_layer: c_int,
   ) -> c_int;
   #[allow(dead_code)]
   fn cabocha_tree_read_from_mecab_node(tree: *mut c_void, node: *mut c_void) -> c_int;
 
-  fn cabocha_tree_token(tree: *mut c_void, i: usize) -> *mut cabocha_token_t;
-  fn cabocha_tree_chunk(tree: *mut c_void, i: usize) -> *mut cabocha_chunk_t;
+  fn cabocha_tree_token(tree: *mut c_void, i: size_t) -> *mut cabocha_token_t;
+  fn cabocha_tree_chunk(tree: *mut c_void, i: size_t) -> *mut cabocha_chunk_t;
 
   fn cabocha_tree_add_token(tree: *mut c_void) -> *const cabocha_token_t;
   fn cabocha_tree_add_chunk(tree: *mut c_void) -> *const cabocha_chunk_t;
@@ -319,7 +322,7 @@ extern "C" {
   #[allow(dead_code)]
   fn cabocha_tree_strdup(tree: *mut c_void, str: *const c_char) -> *const c_char;
   #[allow(dead_code)]
-  fn cabocha_tree_alloc(tree: *mut c_void, size: usize) -> *const c_char;
+  fn cabocha_tree_alloc(tree: *mut c_void, size: size_t) -> *const c_char;
 
   fn cabocha_tree_tostr(tree: *mut c_void, format: c_int) -> *const c_char;
   #[allow(dead_code)]
@@ -327,7 +330,7 @@ extern "C" {
     tree: *mut c_void,
     format: c_int,
     str: *const c_char,
-    length: usize,
+    length: size_t,
   ) -> *const c_char;
 
   fn cabocha_tree_set_charset(tree: *mut c_void, charset: c_int);

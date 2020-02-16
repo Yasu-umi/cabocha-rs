@@ -8,3 +8,6 @@ documentation = "https://docs.rs/cabocha"
 repository = "https://github.com/Yasu-umi/cabocha-rs"
 readme = "README.md"
 keywords = ["cabocha", "japanese", "dependency", "structure", "analyzer"]
+
+[dependencies]
+libc = "0.2.66"
