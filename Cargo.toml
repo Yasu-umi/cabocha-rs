@@ -7,7 +7,9 @@ description = "Safe Rust wrapper for cabocha a japanese language dependency stru
 documentation = "https://docs.rs/cabocha"
 repository = "https://github.com/Yasu-umi/cabocha-rs"
 readme = "README.md"
+categories = ["text-processing"]
 keywords = ["cabocha", "japanese", "dependency", "structure", "analyzer"]
+edition = "2018"
 
 [dependencies]
 libc = "0.2.66"

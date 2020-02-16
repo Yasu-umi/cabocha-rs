@@ -4,6 +4,8 @@ use std::ptr;
 
 use libc::size_t;
 
+use super::utils::*;
+
 const CABOCHA_EUC_JP: i32 = 0;
 const CABOCHA_CP932: i32 = 1;
 const CABOCHA_UTF8: i32 = 2;
