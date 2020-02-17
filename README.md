@@ -1,5 +1,9 @@
 # cabocha-rs
 
+[![cabocha at crates.io](https://img.shields.io/crates/v/cabocha.svg)](https://crates.io/crates/cabocha)
+[![cabocha at docs.rs](https://docs.rs/cabocha/badge.svg)](https://docs.rs/cabocha)
+[![Actions Status](https://github.com/Yasu-umi/cabocha-rs/workflows/test/badge.svg)](https://github.com/Yasu-umi/cabocha-rs/actions)
+
 ## Example
 
 ```bash
@@ -14,9 +18,7 @@ cabocha = "*"
 ```
 
 ```Rust
-extern crate cabocha;
-
-use cabocha::Parser;
+use cabocha::parser::Parser;
 
 fn main() {
   let parser = Parser::new("");
@@ -24,7 +26,7 @@ fn main() {
 
   let mut tree = parser.parse_to_tree(sentence);
 
-  println!("{}", tree.to_string(cabocha::CABOCHA_FORMAT::TREE));
+  println!("{}", tree.to_string(cabocha::consts::CABOCHA_FORMAT::TREE));
 }
 ```
 

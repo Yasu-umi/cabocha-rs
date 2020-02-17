@@ -1,6 +1,4 @@
-extern crate cabocha;
-
-use cabocha::Parser;
+use cabocha::parser::Parser;
 
 fn main() {
   let mut parser = Parser::new("");
@@ -9,7 +7,10 @@ fn main() {
   println!("{}", parser.parse_to_str(text));
 
   let tree = parser.parse_to_tree(text);
-  println!("{}", tree.to_string(cabocha::CABOCHA_FORMAT::LATTICE));
+  println!(
+    "{}",
+    tree.to_string(cabocha::consts::CABOCHA_FORMAT::LATTICE)
+  );
 
   for (idx, chunk) in tree.chunk_iter().enumerate() {
     println!(
