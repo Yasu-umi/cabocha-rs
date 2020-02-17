@@ -17,8 +17,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          apt-get update
-          apt-get install -y cmake gcc g++ curl wget
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc g++ curl wget
 
       - name: Install crf++
         run: |
@@ -27,7 +27,7 @@ jobs:
           cd CRF++-0.58
           ./configure
           make
-          make install
+          sudo make install
           cd ../
 
       - name: Install mecab
@@ -37,7 +37,7 @@ jobs:
           cd ../mecab-0.996
           ./configure --with-charset=utf8
           make
-          make install
+          sudo make install
           cd ../
 
       - name: Install mecab-ipadic
@@ -47,7 +47,7 @@ jobs:
           cd ../mecab-ipadic-2.7.0-20070801
           ./configure --with-charset=utf8
           make
-          make install
+          sudo make install
           cd ../
 
       - name: Install cabocha
@@ -61,7 +61,7 @@ jobs:
           cd ./cabocha-0.69
           ./configure --with-charset=utf8
           make
-          make install
+          sudo make install
           cd ../
 
       - name: ldcofnig
