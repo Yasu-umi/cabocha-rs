@@ -24,7 +24,7 @@ jobs:
         run: |
           wget -O CRF++-0.58.tar.gz 'https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7QVR6VXJ5dWExSTQ'
           tar xvzf CRF++-0.58.tar.gz
-          cd CRF++-0.58
+          cd ./CRF++-0.58
           ./configure
           make
           sudo make install
@@ -36,7 +36,7 @@ jobs:
         run: |
           wget -O mecab-0.996.tar.gz 'https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7cENtOXlicTFaRUE'
           tar xvzf mecab-0.996.tar.gz
-          cd ../mecab-0.996
+          cd ./mecab-0.996
           ./configure --with-charset=utf8
           make
           sudo make install
@@ -48,7 +48,7 @@ jobs:
         run: |
           wget -O mecab-ipadic-2.7.0-20070801.tar.gz 'https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7MWVlSDBCSXZMTXM'
           tar zxfv mecab-ipadic-2.7.0-20070801.tar.gz
-          cd ../mecab-ipadic-2.7.0-20070801
+          cd ./mecab-ipadic-2.7.0-20070801
           ./configure --with-charset=utf8
           make
           sudo make install
