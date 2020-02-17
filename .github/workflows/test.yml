@@ -32,7 +32,7 @@ jobs:
           cd ../
           rm CRF++-0.58.tar.gz
           rm -rf CRF++-0.58
-          ldconfig
+          sudo ldconfig
 
       - name: Install mecab
         run: |
@@ -45,7 +45,7 @@ jobs:
           cd ../
           rm mecab-0.996.tar.gz
           rm -rf mecab-0.996
-          ldconfig
+          sudo ldconfig
 
       - name: Install mecab-ipadic
         run: |
@@ -58,7 +58,7 @@ jobs:
           cd ../
           rm mecab-ipadic-2.7.0-20070801.tar.gz
           rm -rf mecab-ipadic-2.7.0-20070801
-          ldconfig
+          sudo ldconfig
 
       - name: Install cabocha
         run: |
@@ -75,7 +75,7 @@ jobs:
           cd ../
           rm cabocha-0.69.tar.gz
           rm -rf cabocha-0.69
-          ldconfig
+          sudo ldconfig
 
       - name: Cache cargo registry
         uses: actions/cache@v1
