@@ -3,6 +3,10 @@
 #![crate_type = "dylib"]
 #![crate_type = "rlib"]
 
-pub use cabocha::*;
-mod cabocha;
+mod chunk;
+pub mod consts;
+pub mod parser;
+mod sys;
+mod token;
+mod tree;
 mod utils;

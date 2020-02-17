@@ -7,9 +7,10 @@ pub fn ptr_to_string(ptr: *const c_char) -> String {
     ""
   } else {
     let cstr = unsafe { CStr::from_ptr(ptr) };
-    match str::from_utf8(cstr.to_bytes()) {
-      Ok(res) => res,
-      Err(_) => "",
+    if let Ok(s) = str::from_utf8(cstr.to_bytes()) {
+      s
+    } else {
+      ""
     }
   };
   strs.to_string()
@@ -23,6 +24,6 @@ pub fn ptr_to_vec_string(ptr: *const *const c_char, size: usize) -> Vec<String> 
     .collect()
 }
 
-pub fn str_to_heap_ptr<T: Into<Vec<u8>>>(input: T) -> *mut i8 {
+pub fn str_to_heap_ptr<T: Into<Vec<u8>>>(input: T) -> *mut c_char {
   CString::new(input).unwrap().into_raw()
 }
