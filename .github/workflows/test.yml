@@ -73,7 +73,7 @@ jobs:
           make
           sudo make install
           cd ../
-          rm cabocha-0.69.tar.gz
+          rm cabocha-0.69.tar.bz2
           rm -rf cabocha-0.69
           sudo ldconfig
 
