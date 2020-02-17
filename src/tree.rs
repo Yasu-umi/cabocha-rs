@@ -70,20 +70,28 @@ impl Tree {
   }
 
   pub fn token(&self, index: usize) -> Option<Token> {
-    let raw_ptr = unsafe { cabocha_tree_token(self.inner, index) };
-    if raw_ptr.is_null() {
-      None
+    if index < self.token_size() {
+      let raw_ptr = unsafe { cabocha_tree_token(self.inner, index) };
+      if raw_ptr.is_null() {
+        None
+      } else {
+        Some(Token::new(raw_ptr))
+      }
     } else {
-      Some(Token::new(raw_ptr))
+      None
     }
   }
 
   pub fn chunk(&self, index: usize) -> Option<Chunk> {
-    let raw_ptr = unsafe { cabocha_tree_chunk(self.inner, index) };
-    if raw_ptr.is_null() {
-      None
+    if index < self.chunk_size() {
+      let raw_ptr = unsafe { cabocha_tree_chunk(self.inner, index) };
+      if raw_ptr.is_null() {
+        None
+      } else {
+        Some(Chunk::new(raw_ptr))
+      }
     } else {
-      Some(Chunk::new(raw_ptr))
+      None
     }
   }
 
